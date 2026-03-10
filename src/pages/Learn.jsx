@@ -111,16 +111,16 @@ export default function Learn() {
                                 onClick={() => setOpenLesson(openLesson === `${cat.category}-${i}` ? null : `${cat.category}-${i}`)}
                                 className="p-5 cursor-pointer flex items-center justify-between hover:bg-white/[0.02] transition-all"
                             >
-                                <div className="flex items-center gap-3">
+                                <div className="flex min-w-0 items-center gap-3">
                                     <div className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold" style={{ background: `${cat.color}15`, color: cat.color }}>
                                         {i + 1}
                                     </div>
-                                    <span className="font-semibold text-white text-sm">{lesson.title}</span>
+                                    <span className="min-w-0 font-semibold text-white text-sm leading-snug">{lesson.title}</span>
                                 </div>
                                 {openLesson === `${cat.category}-${i}` ? (
-                                    <ChevronDown className="w-4 h-4 text-[#64748b]" />
+                                    <ChevronDown className="w-4 h-4 shrink-0 text-[#64748b]" />
                                 ) : (
-                                    <ChevronRight className="w-4 h-4 text-[#64748b]" />
+                                    <ChevronRight className="w-4 h-4 shrink-0 text-[#64748b]" />
                                 )}
                             </div>
                             {openLesson === `${cat.category}-${i}` && (

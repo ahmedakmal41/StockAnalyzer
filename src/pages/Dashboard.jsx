@@ -150,7 +150,10 @@ export default function Dashboard() {
 
     // Filters
     const [search, setSearch] = useState('');
-    const [category, setCategory] = useState('all'); // all, picks, sectors
+    const [category, setCategory] = useState('all');
+    const [sectorFilter, setSectorFilter] = useState('all');
+    const [moveFilter, setMoveFilter] = useState('all');
+    const [volumeFilter, setVolumeFilter] = useState('all');
 
     useEffect(() => {
         fetchMainData();
@@ -185,12 +188,29 @@ export default function Dashboard() {
         setAnalysisLoading(false);
     };
 
-    const filteredStocks = marketWatch.filter(s => {
-        const matchSearch = !search || s.symbol?.toLowerCase().includes(search.toLowerCase()) || s.name?.toLowerCase().includes(search.toLowerCase());
+    const sectors = [...new Set(marketWatch.map((stock) => stock.sector).filter(Boolean))].sort();
+
+    const matchesVolumeBand = (volume) => {
+        if (volumeFilter === 'all') return true;
+        if (volumeFilter === 'high') return (volume || 0) >= 2000000;
+        if (volumeFilter === 'mid') return (volume || 0) >= 500000 && (volume || 0) < 2000000;
+        return (volume || 0) < 500000;
+    };
+
+    const filteredStocks = marketWatch.filter((stock) => {
+        const matchSearch = !search ||
+            stock.symbol?.toLowerCase().includes(search.toLowerCase()) ||
+            stock.name?.toLowerCase().includes(search.toLowerCase());
         const matchCategory = category === 'all' ||
-            (category === 'picks' && s.change_pct > 2) ||
-            (category === 'sectors' && s.sector !== 'Unknown' && s.sector !== '');
-        return matchSearch && matchCategory;
+            (category === 'leaders' && (stock.change_pct || 0) >= 2) ||
+            (category === 'volume' && (stock.volume || 0) >= 2000000) ||
+            (category === 'defensive' && ['Commercial Banks', 'Fertilizer', 'Power Generation & Distribution', 'Oil & Gas Marketing Companies'].includes(stock.sector));
+        const matchSector = sectorFilter === 'all' || stock.sector === sectorFilter;
+        const matchMove = moveFilter === 'all' ||
+            (moveFilter === 'gainers' && (stock.change_pct || 0) > 0) ||
+            (moveFilter === 'losers' && (stock.change_pct || 0) < 0) ||
+            (moveFilter === 'flat' && Math.abs(stock.change_pct || 0) <= 0.5);
+        return matchSearch && matchCategory && matchSector && matchMove && matchesVolumeBand(stock.volume);
     });
 
     return (
@@ -276,8 +296,8 @@ export default function Dashboard() {
                             ) : analysis && (
                                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                                     <div className="lg:col-span-2">
-                                        <div className="flex items-center gap-4 mb-4">
-                                            <div>
+                                        <div className="flex flex-wrap items-start gap-4 mb-4">
+                                            <div className="min-w-0">
                                                 <h3 className="text-2xl font-extrabold text-white">{analysis.symbol}</h3>
                                                 <p className="text-[#64748b] text-xs">{analysis.sector}</p>
                                             </div>
@@ -286,7 +306,7 @@ export default function Dashboard() {
                                             </div>
                                             <button
                                                 onClick={() => navigate(`/stock/${analysis.symbol}`)}
-                                                className="ml-auto flex items-center gap-1.5 text-[10px] font-bold text-[#10b981] uppercase tracking-[0.15em] hover:opacity-80 transition-opacity"
+                                                className="flex items-center gap-1.5 text-[10px] font-bold text-[#10b981] uppercase tracking-[0.15em] hover:opacity-80 transition-opacity sm:ml-auto"
                                             >
                                                 View Full Details <ExternalLink className="w-3 h-3" />
                                             </button>
@@ -339,25 +359,29 @@ export default function Dashboard() {
                     </div>
 
                     {/* Filters Row - Better Spacing */}
-                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                    <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
                         {/* Category Buttons */}
                         <div className="flex items-center gap-2 flex-wrap">
-                            {['all', 'picks', 'sectors'].map(cat => (
+                            {[
+                                { key: 'all', label: 'All Stocks' },
+                                { key: 'leaders', label: 'Momentum Leaders' },
+                                { key: 'volume', label: 'High Volume' },
+                                { key: 'defensive', label: 'Defensive Sectors' },
+                            ].map((cat) => (
                                 <button
-                                    key={cat}
-                                    onClick={() => setCategory(cat)}
-                                    className={`px-5 py-2.5 rounded-xl text-[12px] font-bold uppercase tracking-wide transition-all duration-300 ${category === cat
+                                    key={cat.key}
+                                    onClick={() => setCategory(cat.key)}
+                                    className={`px-5 py-2.5 rounded-xl text-[12px] font-bold uppercase tracking-wide transition-all duration-300 ${category === cat.key
                                             ? 'bg-[#10b981] text-white shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2),0_4px_12px_rgba(16,185,129,0.25)] border border-[#10b981]'
                                             : 'text-[#64748b] hover:text-white hover:bg-white/[0.04] border border-white/[0.08] hover:border-white/[0.15]'
                                         }`}
                                 >
-                                    {cat === 'all' ? 'All Stocks' : cat === 'picks' ? 'Top Picks' : 'By Sector'}
+                                    {cat.label}
                                 </button>
                             ))}
                         </div>
 
-                        {/* Search and Filter */}
-                        <div className="flex items-center gap-3 flex-1 lg:flex-initial lg:min-w-[400px]">
+                        <div className="grid flex-1 gap-3 xl:grid-cols-[minmax(220px,1.4fr)_repeat(3,minmax(140px,1fr))_auto]">
                             <div className="relative flex-1">
                                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#64748b] w-4 h-4 pointer-events-none" />
                                 <input
@@ -368,8 +392,55 @@ export default function Dashboard() {
                                     className="w-full bg-white/[0.03] border border-white/[0.08] rounded-xl py-3 pl-11 pr-4 text-sm text-white placeholder:text-[#64748b] focus:outline-none focus:border-[#10b981] focus:bg-white/[0.05] focus:shadow-[0_0_0_3px_rgba(16,185,129,0.1)] transition-all"
                                 />
                             </div>
-                            <button className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.08] text-[#64748b] hover:text-white hover:border-white/[0.15] hover:bg-white/[0.05] transition-all">
+                            <div className="relative">
+                                <select
+                                    value={sectorFilter}
+                                    onChange={(e) => setSectorFilter(e.target.value)}
+                                    className="appearance-none w-full bg-white/[0.03] border border-white/[0.08] rounded-xl py-3 px-4 pr-10 text-sm text-white focus:outline-none focus:border-[#10b981] focus:bg-white/[0.05]"
+                                >
+                                    <option value="all">All sectors</option>
+                                    {sectors.map((sector) => <option key={sector} value={sector}>{sector}</option>)}
+                                </select>
+                                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-[#64748b] w-4 h-4 pointer-events-none" />
+                            </div>
+                            <div className="relative">
+                                <select
+                                    value={moveFilter}
+                                    onChange={(e) => setMoveFilter(e.target.value)}
+                                    className="appearance-none w-full bg-white/[0.03] border border-white/[0.08] rounded-xl py-3 px-4 pr-10 text-sm text-white focus:outline-none focus:border-[#10b981] focus:bg-white/[0.05]"
+                                >
+                                    <option value="all">All moves</option>
+                                    <option value="gainers">Gainers</option>
+                                    <option value="losers">Losers</option>
+                                    <option value="flat">Flat to range bound</option>
+                                </select>
+                                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-[#64748b] w-4 h-4 pointer-events-none" />
+                            </div>
+                            <div className="relative">
+                                <select
+                                    value={volumeFilter}
+                                    onChange={(e) => setVolumeFilter(e.target.value)}
+                                    className="appearance-none w-full bg-white/[0.03] border border-white/[0.08] rounded-xl py-3 px-4 pr-10 text-sm text-white focus:outline-none focus:border-[#10b981] focus:bg-white/[0.05]"
+                                >
+                                    <option value="all">All liquidity</option>
+                                    <option value="high">High volume</option>
+                                    <option value="mid">Mid volume</option>
+                                    <option value="low">Low volume</option>
+                                </select>
+                                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-[#64748b] w-4 h-4 pointer-events-none" />
+                            </div>
+                            <button
+                                onClick={() => {
+                                    setSearch('');
+                                    setCategory('all');
+                                    setSectorFilter('all');
+                                    setMoveFilter('all');
+                                    setVolumeFilter('all');
+                                }}
+                                className="flex items-center justify-center gap-2 rounded-xl bg-white/[0.03] border border-white/[0.08] px-4 py-3 text-sm text-[#94a3b8] hover:text-white hover:border-white/[0.15] hover:bg-white/[0.05] transition-all"
+                            >
                                 <Filter className="w-4 h-4" />
+                                Reset
                             </button>
                         </div>
                     </div>
@@ -393,9 +464,9 @@ export default function Dashboard() {
                                     <th>Name</th>
                                     <th>Price</th>
                                     <th>24h %</th>
-                                    <th className="hidden lg:table-cell">Market Cap</th>
-                                    <th className="hidden lg:table-cell">Volume(24h)</th>
-                                    <th className="hidden xl:table-cell">Circulating Supply</th>
+                                    <th className="hidden lg:table-cell">Sector</th>
+                                    <th className="hidden lg:table-cell">Volume</th>
+                                    <th className="hidden xl:table-cell">Day Range</th>
                                     <th className="text-right">Action</th>
                                 </tr>
                             </thead>
@@ -404,6 +475,8 @@ export default function Dashboard() {
                                     [...Array(10)].map((_, i) => (
                                         <tr key={i}><td colSpan={8} className="p-6 text-center animate-pulse text-[#64748b]">Data fetching...</td></tr>
                                     ))
+                                ) : filteredStocks.length === 0 ? (
+                                    <tr><td colSpan={8} className="p-6 text-center text-[#64748b]">No stocks match the selected PSX filters.</td></tr>
                                 ) : filteredStocks.slice(0, 50).map((s, i) => (
                                     <tr
                                         key={s.symbol}
@@ -429,14 +502,14 @@ export default function Dashboard() {
                                                 {Math.abs(s.change_pct).toFixed(2)}%
                                             </span>
                                         </td>
-                                        <td className="hidden lg:table-cell text-[#94a3b8] text-xs font-mono">
-                                            Rs. {(s.close * (Math.random() * 1e8 + 1e7) / 1e9).toFixed(2)}B
+                                        <td className="hidden lg:table-cell text-[#94a3b8] text-xs">
+                                            {s.sector || 'Unknown'}
                                         </td>
                                         <td className="hidden lg:table-cell text-[#94a3b8] text-xs font-mono">
-                                            Rs. {(s.volume / 1e6).toFixed(1)}M
+                                            {(s.volume || 0).toLocaleString()}
                                         </td>
                                         <td className="hidden xl:table-cell text-[#94a3b8] text-xs font-mono">
-                                            {(Math.random() * 1e7 + 1e6).toFixed(0)} {s.symbol}
+                                            {s.low?.toFixed(2)} - {s.high?.toFixed(2)}
                                         </td>
                                         <td className="text-right">
                                             <button className="p-2 rounded-lg bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -456,11 +529,11 @@ export default function Dashboard() {
                 <div className="flex items-center justify-center gap-6">
                     <div className="flex items-center gap-2">
                         <div className="w-2 h-2 rounded-full bg-[#10b981]" />
-                        <span className="text-[10px] text-[#94a3b8]">482 Stocks Active</span>
+                        <span className="text-[10px] text-[#94a3b8]">{marketWatch.length} Stocks Active</span>
                     </div>
                     <div className="flex items-center gap-2">
                         <div className="w-2 h-2 rounded-full bg-[#f43f5e]" />
-                        <span className="text-[10px] text-[#94a3b8]">12 Exchanges Tracked</span>
+                        <span className="text-[10px] text-[#94a3b8]">{sectors.length} Sectors Tracked</span>
                     </div>
                 </div>
             </footer>

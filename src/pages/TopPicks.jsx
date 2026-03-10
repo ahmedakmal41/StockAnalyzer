@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Sparkles, TrendingUp, ArrowUpRight, Target, Zap, Crown, ChevronRight } from 'lucide-react';
+import { Search, Sparkles, TrendingUp, ArrowUpRight, Target, Zap, Crown, ChevronRight, ChevronDown, SlidersHorizontal } from 'lucide-react';
 import axios from 'axios';
 
 const API_BASE = "https://stockanalyzerr-a6gxg3g3gwhebbex.eastus-01.azurewebsites.net";
@@ -10,6 +10,10 @@ export default function TopPicks() {
     const navigate = useNavigate();
     const [picks, setPicks] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [search, setSearch] = useState('');
+    const [sectorFilter, setSectorFilter] = useState('all');
+    const [directionFilter, setDirectionFilter] = useState('all');
+    const [scoreFilter, setScoreFilter] = useState('all');
 
     useEffect(() => {
         fetchPicks();
@@ -22,6 +26,24 @@ export default function TopPicks() {
         } catch (e) { console.error(e); }
         setLoading(false);
     };
+
+    const sectors = [...new Set(picks.map((pick) => pick.sector).filter(Boolean))].sort();
+
+    const filteredPicks = picks.filter((pick) => {
+        const score = pick.profit_score || 0;
+        const matchSearch = !search ||
+            pick.symbol?.toLowerCase().includes(search.toLowerCase()) ||
+            pick.name?.toLowerCase().includes(search.toLowerCase());
+        const matchSector = sectorFilter === 'all' || pick.sector === sectorFilter;
+        const matchDirection = directionFilter === 'all' ||
+            (directionFilter === 'gainers' && (pick.change_pct || 0) > 0) ||
+            (directionFilter === 'pullback' && (pick.change_pct || 0) < 0);
+        const matchScore = scoreFilter === 'all' ||
+            (scoreFilter === 'elite' && score >= 5) ||
+            (scoreFilter === 'strong' && score >= 3 && score < 5) ||
+            (scoreFilter === 'developing' && score < 3);
+        return matchSearch && matchSector && matchDirection && matchScore;
+    });
 
     return (
         <div className="space-y-8">
@@ -69,6 +91,73 @@ export default function TopPicks() {
                 ))}
             </motion.div>
 
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }} className="glass p-6 space-y-4">
+                <div className="grid gap-4 xl:grid-cols-[minmax(220px,1.5fr)_repeat(3,minmax(140px,1fr))_auto]">
+                    <div className="relative">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#64748b] w-4 h-4 pointer-events-none" />
+                        <input
+                            type="text"
+                            placeholder="Search by symbol or company..."
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            className="w-full bg-white/[0.03] border border-white/[0.08] rounded-xl py-3 pl-11 pr-4 text-sm text-white placeholder:text-[#64748b] focus:outline-none focus:border-[#10b981] focus:bg-white/[0.05] transition-all"
+                        />
+                    </div>
+                    <div className="relative">
+                        <select
+                            value={sectorFilter}
+                            onChange={(e) => setSectorFilter(e.target.value)}
+                            className="appearance-none w-full bg-white/[0.03] border border-white/[0.08] rounded-xl py-3 px-4 pr-10 text-sm text-white focus:outline-none focus:border-[#10b981] focus:bg-white/[0.05] transition-all"
+                        >
+                            <option value="all">All sectors</option>
+                            {sectors.map((sector) => <option key={sector} value={sector}>{sector}</option>)}
+                        </select>
+                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-[#64748b] w-4 h-4 pointer-events-none" />
+                    </div>
+                    <div className="relative">
+                        <select
+                            value={directionFilter}
+                            onChange={(e) => setDirectionFilter(e.target.value)}
+                            className="appearance-none w-full bg-white/[0.03] border border-white/[0.08] rounded-xl py-3 px-4 pr-10 text-sm text-white focus:outline-none focus:border-[#10b981] focus:bg-white/[0.05] transition-all"
+                        >
+                            <option value="all">All momentum</option>
+                            <option value="gainers">Positive momentum</option>
+                            <option value="pullback">Negative pullback</option>
+                        </select>
+                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-[#64748b] w-4 h-4 pointer-events-none" />
+                    </div>
+                    <div className="relative">
+                        <select
+                            value={scoreFilter}
+                            onChange={(e) => setScoreFilter(e.target.value)}
+                            className="appearance-none w-full bg-white/[0.03] border border-white/[0.08] rounded-xl py-3 px-4 pr-10 text-sm text-white focus:outline-none focus:border-[#10b981] focus:bg-white/[0.05] transition-all"
+                        >
+                            <option value="all">All scores</option>
+                            <option value="elite">Elite 5-7</option>
+                            <option value="strong">Strong 3-4</option>
+                            <option value="developing">Developing 0-2</option>
+                        </select>
+                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-[#64748b] w-4 h-4 pointer-events-none" />
+                    </div>
+                    <button
+                        onClick={() => {
+                            setSearch('');
+                            setSectorFilter('all');
+                            setDirectionFilter('all');
+                            setScoreFilter('all');
+                        }}
+                        className="flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-white/[0.03] border border-white/[0.08] text-[#94a3b8] hover:text-white hover:border-white/[0.15] hover:bg-white/[0.05] transition-all whitespace-nowrap"
+                    >
+                        <SlidersHorizontal className="w-4 h-4" />
+                        <span className="text-sm font-semibold">Reset</span>
+                    </button>
+                </div>
+                <div className="flex items-center justify-between pt-2 border-t border-white/[0.05] text-sm text-[#64748b]">
+                    <div>Showing <span className="text-white font-bold">{filteredPicks.length}</span> of <span className="text-white font-bold">{picks.length}</span> picks</div>
+                    <div className="hidden md:block">Scored using available PSX market data only</div>
+                </div>
+            </motion.div>
+
             {/* Picks Grid */}
             {loading ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -78,7 +167,9 @@ export default function TopPicks() {
                 </div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {picks.map((stock, i) => {
+                    {filteredPicks.length === 0 ? (
+                        <div className="glass p-8 text-center text-[#64748b] md:col-span-2 lg:col-span-3">No top picks match the selected filters.</div>
+                    ) : filteredPicks.map((stock, i) => {
                         const isUp = stock.change_pct > 0;
                         const score = stock.profit_score || 0;
                         const scoreColor = score >= 5 ? '#10b981' : score >= 3 ? '#3b82f6' : '#f59e0b';

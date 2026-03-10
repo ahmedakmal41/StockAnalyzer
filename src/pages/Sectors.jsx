@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { ArrowUpRight, ArrowDownRight, BarChart3 } from 'lucide-react';
+import { Search, ChevronDown, SlidersHorizontal, ArrowUpRight, ArrowDownRight, BarChart3 } from 'lucide-react';
 import axios from 'axios';
 
 const API_BASE = "https://stockanalyzerr-a6gxg3g3gwhebbex.eastus-01.azurewebsites.net";
@@ -11,6 +11,9 @@ export default function Sectors() {
     const [stocks, setStocks] = useState([]);
     const [loading, setLoading] = useState(true);
     const [expandedSector, setExpandedSector] = useState(null);
+    const [search, setSearch] = useState('');
+    const [breadthFilter, setBreadthFilter] = useState('all');
+    const [liquidityFilter, setLiquidityFilter] = useState('all');
 
     useEffect(() => {
         axios.get(`${API_BASE}/stocks/market-watch`).then(res => {
@@ -35,6 +38,19 @@ export default function Sectors() {
         avgChange: data.stocks.reduce((a, s) => a + (s.change_pct || 0), 0) / data.stocks.length,
         stocks: data.stocks.sort((a, b) => (b.volume || 0) - (a.volume || 0)),
     })).sort((a, b) => b.totalVol - a.totalVol);
+
+    const filteredSectors = sectors.filter((sector) => {
+        const matchSearch = !search || sector.name.toLowerCase().includes(search.toLowerCase());
+        const matchBreadth = breadthFilter === 'all' ||
+            (breadthFilter === 'advancing' && sector.avgChange > 0) ||
+            (breadthFilter === 'declining' && sector.avgChange < 0) ||
+            (breadthFilter === 'balanced' && Math.abs(sector.avgChange) <= 0.5);
+        const matchLiquidity = liquidityFilter === 'all' ||
+            (liquidityFilter === 'high' && sector.totalVol >= 10000000) ||
+            (liquidityFilter === 'mid' && sector.totalVol >= 3000000 && sector.totalVol < 10000000) ||
+            (liquidityFilter === 'low' && sector.totalVol < 3000000);
+        return matchSearch && matchBreadth && matchLiquidity;
+    });
 
     return (
         <div className="space-y-8">
@@ -61,11 +77,69 @@ export default function Sectors() {
                 </div>
             </motion.div>
 
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass p-6 space-y-4">
+                <div className="grid gap-4 xl:grid-cols-[minmax(220px,1.5fr)_repeat(2,minmax(160px,1fr))_auto]">
+                    <div className="relative">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#64748b] w-4 h-4 pointer-events-none" />
+                        <input
+                            type="text"
+                            placeholder="Search sector..."
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            className="w-full bg-white/[0.03] border border-white/[0.08] rounded-xl py-3 pl-11 pr-4 text-sm text-white placeholder:text-[#64748b] focus:outline-none focus:border-[#10b981] focus:bg-white/[0.05] transition-all"
+                        />
+                    </div>
+                    <div className="relative">
+                        <select
+                            value={breadthFilter}
+                            onChange={(e) => setBreadthFilter(e.target.value)}
+                            className="appearance-none w-full bg-white/[0.03] border border-white/[0.08] rounded-xl py-3 px-4 pr-10 text-sm text-white focus:outline-none focus:border-[#10b981] focus:bg-white/[0.05] transition-all"
+                        >
+                            <option value="all">All breadth</option>
+                            <option value="advancing">Advancing</option>
+                            <option value="declining">Declining</option>
+                            <option value="balanced">Balanced</option>
+                        </select>
+                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-[#64748b] w-4 h-4 pointer-events-none" />
+                    </div>
+                    <div className="relative">
+                        <select
+                            value={liquidityFilter}
+                            onChange={(e) => setLiquidityFilter(e.target.value)}
+                            className="appearance-none w-full bg-white/[0.03] border border-white/[0.08] rounded-xl py-3 px-4 pr-10 text-sm text-white focus:outline-none focus:border-[#10b981] focus:bg-white/[0.05] transition-all"
+                        >
+                            <option value="all">All liquidity</option>
+                            <option value="high">High liquidity</option>
+                            <option value="mid">Mid liquidity</option>
+                            <option value="low">Low liquidity</option>
+                        </select>
+                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-[#64748b] w-4 h-4 pointer-events-none" />
+                    </div>
+                    <button
+                        onClick={() => {
+                            setSearch('');
+                            setBreadthFilter('all');
+                            setLiquidityFilter('all');
+                        }}
+                        className="flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-white/[0.03] border border-white/[0.08] text-[#94a3b8] hover:text-white hover:border-white/[0.15] hover:bg-white/[0.05] transition-all whitespace-nowrap"
+                    >
+                        <SlidersHorizontal className="w-4 h-4" />
+                        <span className="text-sm font-semibold">Reset</span>
+                    </button>
+                </div>
+                <div className="flex items-center justify-between pt-2 border-t border-white/[0.05] text-sm text-[#64748b]">
+                    <div>Showing <span className="text-white font-bold">{filteredSectors.length}</span> of <span className="text-white font-bold">{sectors.length}</span> sectors</div>
+                    <div className="hidden md:block">Filtered using move breadth and traded volume</div>
+                </div>
+            </motion.div>
+
             {loading ? (
                 <div className="space-y-4">{[...Array(6)].map((_, i) => <div key={i} className="glass p-6 h-24 animate-shimmer" />)}</div>
             ) : (
                 <div className="space-y-3">
-                    {sectors.map((sector, i) => {
+                    {filteredSectors.length === 0 ? (
+                        <div className="glass p-8 text-center text-[#64748b]">No sectors match the selected filters.</div>
+                    ) : filteredSectors.map((sector, i) => {
                         const isUp = sector.avgChange > 0;
                         const expanded = expandedSector === sector.name;
                         return (

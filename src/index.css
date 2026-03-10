@@ -39,8 +39,7 @@ body {
   margin: 0;
   min-height: 100vh;
   overflow-x: hidden;
-  background:
-    linear-gradient(180deg, #0b1521 0%, #09131e 42%, #08111a 100%);
+  background: #09131f;
   color: var(--color-text-primary);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
@@ -93,13 +92,6 @@ a {
     linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px);
   background-size: 64px 64px;
   mask-image: linear-gradient(180deg, rgba(255, 255, 255, 0.75), transparent 92%);
-}
-
-.bg-shell-gradient {
-  background:
-    linear-gradient(180deg, rgba(124, 178, 216, 0.08), transparent 45%),
-    linear-gradient(90deg, rgba(215, 187, 135, 0.05), transparent 30%, transparent 70%, rgba(124, 178, 216, 0.04));
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
 }
 
 .enterprise-panel,
@@ -170,9 +162,10 @@ a {
   max-width: 12ch;
   font-family: var(--font-display);
   font-size: clamp(2.3rem, 4vw, 4.2rem);
-  line-height: 1;
+  line-height: 1.05;
   letter-spacing: -0.06em;
   font-weight: 800;
+  overflow-wrap: anywhere;
 }
 
 .hero-copy p,
@@ -244,6 +237,7 @@ a {
 .rail-foot {
   display: inline-flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 0.6rem;
   border-radius: 999px;
   border: 1px solid var(--color-border-subtle);
@@ -305,9 +299,14 @@ a {
 
 .rail-header {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   gap: 1rem;
   align-items: flex-start;
+}
+
+.rail-header > * {
+  min-width: 0;
 }
 
 .rail-header h2 {
@@ -527,13 +526,18 @@ a {
 .page-hero-grid {
   display: grid;
   gap: 1rem;
-  grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
-  align-items: end;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
+  align-items: start;
+}
+
+.page-hero-grid > * {
+  min-width: 0;
 }
 
 .page-hero-side {
   display: grid;
   gap: 0.9rem;
+  align-content: start;
 }
 
 .page-stat {
@@ -541,6 +545,7 @@ a {
   border: 1px solid var(--color-border-subtle);
   background: rgba(255, 255, 255, 0.025);
   padding: 1rem;
+  min-width: 0;
 }
 
 .page-stat strong {
@@ -706,11 +711,14 @@ a {
   scrollbar-width: none;
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 1280px) {
   .page-hero-grid,
   .metric-row {
     grid-template-columns: 1fr;
   }
+}
+
+@media (max-width: 1024px) {
 
   .rail-grid {
     grid-template-columns: 1fr 1fr;

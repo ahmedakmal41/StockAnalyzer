@@ -66,7 +66,6 @@ const shellMetrics = [
 const FloatingBackdrop = () => (
   <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
     <div className="absolute inset-0 bg-noise opacity-55" />
-    <div className="absolute inset-x-0 top-0 h-[420px] bg-shell-gradient" />
   </div>
 );
 

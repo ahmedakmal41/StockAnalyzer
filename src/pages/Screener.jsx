@@ -14,6 +14,9 @@ export default function Screener() {
     const [sortKey, setSortKey] = useState('change_pct');
     const [sortDir, setSortDir] = useState('desc');
     const [sectorFilter, setSectorFilter] = useState('all');
+    const [moveFilter, setMoveFilter] = useState('all');
+    const [priceBand, setPriceBand] = useState('all');
+    const [volumeBand, setVolumeBand] = useState('all');
 
     useEffect(() => {
         fetchMarketWatch();
@@ -30,11 +33,29 @@ export default function Screener() {
 
     const sectors = [...new Set(stocks.map(s => s.sector))].filter(Boolean).sort();
 
+    const matchesPriceBand = (price) => {
+        if (priceBand === 'all') return true;
+        if (priceBand === 'under50') return (price || 0) < 50;
+        if (priceBand === '50to200') return (price || 0) >= 50 && (price || 0) <= 200;
+        return (price || 0) > 200;
+    };
+
+    const matchesVolumeBand = (volume) => {
+        if (volumeBand === 'all') return true;
+        if (volumeBand === 'high') return (volume || 0) >= 2000000;
+        if (volumeBand === 'mid') return (volume || 0) >= 500000 && (volume || 0) < 2000000;
+        return (volume || 0) < 500000;
+    };
+
     const filteredStocks = stocks
         .filter(s => {
             const matchSearch = !search || s.symbol?.toLowerCase().includes(search.toLowerCase()) || s.name?.toLowerCase().includes(search.toLowerCase());
             const matchSector = sectorFilter === 'all' || s.sector === sectorFilter;
-            return matchSearch && matchSector;
+            const matchMove = moveFilter === 'all' ||
+                (moveFilter === 'gainers' && (s.change_pct || 0) > 0) ||
+                (moveFilter === 'losers' && (s.change_pct || 0) < 0) ||
+                (moveFilter === 'volatile' && Math.abs(s.change_pct || 0) >= 3);
+            return matchSearch && matchSector && matchMove && matchesPriceBand(s.close) && matchesVolumeBand(s.volume);
         })
         .sort((a, b) => {
             const aVal = a[sortKey] || 0;
@@ -88,7 +109,7 @@ export default function Screener() {
                 transition={{ delay: 0.1 }}
                 className="glass p-6 space-y-4"
             >
-                <div className="flex flex-col lg:flex-row gap-4">
+                <div className="grid gap-4 xl:grid-cols-[minmax(220px,1.5fr)_repeat(4,minmax(140px,1fr))_auto]">
                     {/* Search Input - Full Width on Mobile */}
                     <div className="relative flex-1">
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#64748b] w-4 h-4 pointer-events-none" />
@@ -114,10 +135,62 @@ export default function Screener() {
                         <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-[#64748b] w-4 h-4 pointer-events-none" />
                     </div>
 
-                    {/* Advanced Filters Button */}
-                    <button className="flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-white/[0.03] border border-white/[0.08] text-[#94a3b8] hover:text-white hover:border-white/[0.15] hover:bg-white/[0.05] transition-all whitespace-nowrap">
+                    <div className="relative">
+                        <select
+                            value={moveFilter}
+                            onChange={(e) => setMoveFilter(e.target.value)}
+                            className="appearance-none w-full bg-white/[0.03] border border-white/[0.08] rounded-xl py-3 px-4 pr-10 text-sm text-white focus:outline-none focus:border-[#10b981] focus:bg-white/[0.05] transition-all cursor-pointer"
+                        >
+                            <option value="all">All moves</option>
+                            <option value="gainers">Gainers</option>
+                            <option value="losers">Losers</option>
+                            <option value="volatile">3%+ movers</option>
+                        </select>
+                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-[#64748b] w-4 h-4 pointer-events-none" />
+                    </div>
+
+                    <div className="relative">
+                        <select
+                            value={priceBand}
+                            onChange={(e) => setPriceBand(e.target.value)}
+                            className="appearance-none w-full bg-white/[0.03] border border-white/[0.08] rounded-xl py-3 px-4 pr-10 text-sm text-white focus:outline-none focus:border-[#10b981] focus:bg-white/[0.05] transition-all cursor-pointer"
+                        >
+                            <option value="all">All prices</option>
+                            <option value="under50">Under Rs. 50</option>
+                            <option value="50to200">Rs. 50-200</option>
+                            <option value="over200">Above Rs. 200</option>
+                        </select>
+                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-[#64748b] w-4 h-4 pointer-events-none" />
+                    </div>
+
+                    <div className="relative">
+                        <select
+                            value={volumeBand}
+                            onChange={(e) => setVolumeBand(e.target.value)}
+                            className="appearance-none w-full bg-white/[0.03] border border-white/[0.08] rounded-xl py-3 px-4 pr-10 text-sm text-white focus:outline-none focus:border-[#10b981] focus:bg-white/[0.05] transition-all cursor-pointer"
+                        >
+                            <option value="all">All volume</option>
+                            <option value="high">High volume</option>
+                            <option value="mid">Mid volume</option>
+                            <option value="low">Low volume</option>
+                        </select>
+                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-[#64748b] w-4 h-4 pointer-events-none" />
+                    </div>
+
+                    <button
+                        onClick={() => {
+                            setSearch('');
+                            setSectorFilter('all');
+                            setMoveFilter('all');
+                            setPriceBand('all');
+                            setVolumeBand('all');
+                            setSortKey('change_pct');
+                            setSortDir('desc');
+                        }}
+                        className="flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-white/[0.03] border border-white/[0.08] text-[#94a3b8] hover:text-white hover:border-white/[0.15] hover:bg-white/[0.05] transition-all whitespace-nowrap"
+                    >
                         <SlidersHorizontal className="w-4 h-4" />
-                        <span className="text-sm font-semibold">Filters</span>
+                        <span className="text-sm font-semibold">Reset</span>
                     </button>
                 </div>
 
@@ -157,7 +230,11 @@ export default function Screener() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {filteredStocks.slice(0, 100).map((stock, i) => {
+                                {filteredStocks.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={9} className="text-center text-[#64748b] py-8">No PSX listings match the current screen.</td>
+                                    </tr>
+                                ) : filteredStocks.slice(0, 100).map((stock, i) => {
                                     const isUp = stock.change_pct > 0;
                                     const isDown = stock.change_pct < 0;
                                     return (
