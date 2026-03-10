@@ -195,6 +195,30 @@ export default function Dashboard() {
 
     return (
         <div className="space-y-6">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="page-hero">
+                <div className="page-hero-grid">
+                    <div>
+                        <div className="eyebrow-row">
+                            <span className="eyebrow-badge">Executive overview</span>
+                            <span className="eyebrow-note">Real-time breadth and conviction</span>
+                        </div>
+                        <h2>Market <span className="gradient-text">Dashboard</span></h2>
+                        <p>
+                            Monitor sentiment, leaders, laggards, and AI-generated technical context from a single command surface tuned for fast enterprise decision cycles.
+                        </p>
+                    </div>
+                    <div className="page-hero-side">
+                        <div className="page-stat">
+                            <strong>{marketWatch.length || '--'}</strong>
+                            <span>Live watch symbols</span>
+                        </div>
+                        <div className="page-stat">
+                            <strong>{Math.round(sentimentValue)}%</strong>
+                            <span>Positive participation</span>
+                        </div>
+                    </div>
+                </div>
+            </motion.div>
 
             {/* ─── Highlights Row ─── */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

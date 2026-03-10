@@ -38,9 +38,27 @@ export default function Sectors() {
 
     return (
         <div className="space-y-8">
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-                <h2 className="text-4xl font-extrabold tracking-tight mb-3">Sector <span className="gradient-text">Analysis</span></h2>
-                <p className="text-[#64748b] text-[15px]">Explore {sectors.length} sectors across the PSX. Click to expand.</p>
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="page-hero">
+                <div className="page-hero-grid">
+                    <div>
+                        <div className="eyebrow-row">
+                            <span className="eyebrow-badge">Rotation monitor</span>
+                            <span className="eyebrow-note">Breadth and liquidity</span>
+                        </div>
+                        <h2>Sector <span className="gradient-text">Analysis</span></h2>
+                        <p>Explore {sectors.length} sectors across the PSX with an emphasis on capital flow, participation, and leadership shifts.</p>
+                    </div>
+                    <div className="page-hero-side">
+                        <div className="page-stat">
+                            <strong>{sectors.length || '--'}</strong>
+                            <span>Tracked sectors</span>
+                        </div>
+                        <div className="page-stat">
+                            <strong>{stocks.length || '--'}</strong>
+                            <span>Total mapped stocks</span>
+                        </div>
+                    </div>
+                </div>
             </motion.div>
 
             {loading ? (

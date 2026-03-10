@@ -54,17 +54,29 @@ export default function Learn() {
 
     return (
         <div className="space-y-8">
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-                <div className="flex items-center gap-2 mb-3">
-                    <BookOpen className="w-5 h-5 text-[#3b82f6]" />
-                    <span className="text-[11px] font-semibold text-[#3b82f6] uppercase tracking-[0.15em]">Learning Center</span>
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="page-hero">
+                <div className="page-hero-grid">
+                    <div>
+                        <div className="eyebrow-row">
+                            <span className="eyebrow-badge">Learning center</span>
+                            <span className="eyebrow-note">Operational knowledge base</span>
+                        </div>
+                        <h2>Learn to <span className="gradient-text">Invest</span></h2>
+                        <p>
+                            Build a common investment language for teams and clients with structured guidance across fundamentals, technical analysis, risk management, and strategy.
+                        </p>
+                    </div>
+                    <div className="page-hero-side">
+                        <div className="page-stat">
+                            <strong>{lessons.length}</strong>
+                            <span>Learning tracks</span>
+                        </div>
+                        <div className="page-stat">
+                            <strong>{lessons.reduce((count, category) => count + category.items.length, 0)}</strong>
+                            <span>Guided modules</span>
+                        </div>
+                    </div>
                 </div>
-                <h2 className="text-4xl font-extrabold tracking-tight mb-3">
-                    Learn to <span className="gradient-text">Invest</span>
-                </h2>
-                <p className="text-[#64748b] text-[15px] max-w-xl">
-                    Master stock market investing on the Pakistan Stock Exchange with our comprehensive guides covering fundamentals, technical analysis, risk management, and proven strategies.
-                </p>
             </motion.div>
 
             {/* Category Tabs */}

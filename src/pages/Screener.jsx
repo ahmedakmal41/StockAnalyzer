@@ -56,13 +56,29 @@ export default function Screener() {
     return (
         <div className="space-y-8">
             {/* Page Header */}
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
-                <h2 className="text-4xl font-extrabold tracking-tight text-white">
-                    Stock <span className="gradient-text">Screener</span>
-                </h2>
-                <p className="text-[#94a3b8] text-base max-w-2xl">
-                    Filter and analyze all {stocks.length} stocks listed on the Pakistan Stock Exchange in real-time.
-                </p>
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="page-hero">
+                <div className="page-hero-grid">
+                    <div>
+                        <div className="eyebrow-row">
+                            <span className="eyebrow-badge">Precision screening</span>
+                            <span className="eyebrow-note">Live market interrogation</span>
+                        </div>
+                        <h2>Stock <span className="gradient-text">Screener</span></h2>
+                        <p>
+                            Filter and analyze all {stocks.length} stocks listed on the Pakistan Stock Exchange with a workflow designed for rapid institutional review.
+                        </p>
+                    </div>
+                    <div className="page-hero-side">
+                        <div className="page-stat">
+                            <strong>{filteredStocks.length}</strong>
+                            <span>Visible matches</span>
+                        </div>
+                        <div className="page-stat">
+                            <strong>{sectors.length || '--'}</strong>
+                            <span>Sector filters</span>
+                        </div>
+                    </div>
+                </div>
             </motion.div>
 
             {/* Filters Bar - Improved Spacing */}

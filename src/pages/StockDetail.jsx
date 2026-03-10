@@ -56,11 +56,16 @@ export default function StockDetail() {
     return (
         <div className="space-y-6">
             {/* Header */}
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="flex flex-wrap items-start justify-between gap-4">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="page-hero">
+                <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
                     <button onClick={() => navigate(-1)} className="flex items-center gap-1 text-xs text-[#64748b] hover:text-white mb-3 transition-colors">
                         <ArrowLeft className="w-3 h-3" /> Back
                     </button>
+                    <div className="eyebrow-row">
+                        <span className="eyebrow-badge">Security workspace</span>
+                        <span className="eyebrow-note">Single-name deep dive</span>
+                    </div>
                     <div className="flex items-center gap-3 mb-1">
                         <h2 className="text-3xl font-extrabold text-white">{analysis.symbol}</h2>
                         <span className={`signal-badge ${isUp ? 'signal-buy' : 'signal-sell'}`}>
@@ -73,6 +78,7 @@ export default function StockDetail() {
                 <div className="text-right">
                     <p className="text-4xl font-extrabold font-mono text-white">Rs. {analysis.latest_price?.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
                     <p className={`text-sm font-semibold ${isUp ? 'text-[#10b981]' : 'text-[#f43f5e]'}`}>{isUp ? '+' : ''}{analysis.change?.toFixed(2)} PKR</p>
+                </div>
                 </div>
             </motion.div>
 

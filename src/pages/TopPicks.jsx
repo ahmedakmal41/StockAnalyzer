@@ -25,17 +25,29 @@ export default function TopPicks() {
 
     return (
         <div className="space-y-8">
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-                <div className="flex items-center gap-2 mb-3">
-                    <Crown className="w-5 h-5 text-[#f59e0b]" />
-                    <span className="text-[11px] font-semibold text-[#f59e0b] uppercase tracking-[0.15em]">AI Curated</span>
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="page-hero">
+                <div className="page-hero-grid">
+                    <div>
+                        <div className="eyebrow-row">
+                            <span className="eyebrow-badge">AI curated</span>
+                            <span className="eyebrow-note">Priority queue for opportunity review</span>
+                        </div>
+                        <h2>Top <span className="gradient-text">Picks</span></h2>
+                        <p>
+                            Stocks ranked by our proprietary Profit Index algorithm, blending momentum, price action, and volume analysis into a concise decision list.
+                        </p>
+                    </div>
+                    <div className="page-hero-side">
+                        <div className="page-stat">
+                            <strong>{picks.length || '--'}</strong>
+                            <span>Active picks</span>
+                        </div>
+                        <div className="page-stat">
+                            <strong>7-point</strong>
+                            <span>Scoring framework</span>
+                        </div>
+                    </div>
                 </div>
-                <h2 className="text-4xl font-extrabold tracking-tight mb-3">
-                    Top <span className="gradient-text">Picks</span>
-                </h2>
-                <p className="text-[#64748b] text-[15px] max-w-xl">
-                    Stocks ranked by our proprietary Profit Index algorithm. Combining momentum, price action, and volume analysis to identify high-potential opportunities.
-                </p>
             </motion.div>
 
             {/* Profit Index Explanation */}
