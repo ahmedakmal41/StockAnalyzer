@@ -5,10 +5,11 @@ import {
   Activity,
   ArrowUpRight,
   ChevronRight,
-  Globe2,
   LayoutDashboard,
+  LineChart,
   Search,
   ShieldCheck,
+  SlidersHorizontal,
   Sparkles,
   X,
 } from 'lucide-react';
@@ -25,61 +26,47 @@ const API_BASE = 'https://stockanalyzerr-a6gxg3g3gwhebbex.eastus-01.azurewebsite
 
 const routeMeta = {
   '/': {
-    eyebrow: 'Market command center',
-    title: 'Decisions built for professional capital allocation.',
+    eyebrow: 'Overview',
+    title: 'Market intelligence for teams that trade with discipline.',
     description:
-      'Unify market breadth, watchlists, sector rotation, and AI-assisted signals in one operational surface.',
+      'A unified operating layer for market breadth, security selection, sector rotation, and technical signal review.',
   },
   '/screener': {
-    eyebrow: 'Discovery engine',
-    title: 'Screen the market with speed and institutional clarity.',
+    eyebrow: 'Screener',
+    title: 'A faster route from market scan to shortlist.',
     description:
-      'Move from broad opportunity scans to precise stock-level decisions with live filters and ranked tables.',
+      'Use live filters, ranked tables, and sector context to isolate investable names without leaving the workflow.',
   },
   '/top-picks': {
-    eyebrow: 'Signal prioritization',
-    title: 'Focus attention on the highest-conviction setups first.',
+    eyebrow: 'Top picks',
+    title: 'High-conviction ideas, ranked and explained.',
     description:
-      'Rank opportunities by momentum, price action, and flow so teams can act on the strongest names quickly.',
+      'A ranked queue of opportunities built from momentum, price action, and participation signals.',
   },
   '/sectors': {
-    eyebrow: 'Rotation intelligence',
-    title: 'Track sector leadership and capital movement in real time.',
+    eyebrow: 'Sectors',
+    title: 'See where leadership is strengthening or fading.',
     description:
-      'Compare participation, volatility, and liquidity trends across the exchange from a single view.',
+      'Compare participation, liquidity, and average move across the exchange in a single analytical frame.',
   },
   '/learn': {
-    eyebrow: 'Capability enablement',
-    title: 'Equip every stakeholder with a common analytical language.',
+    eyebrow: 'Learning',
+    title: 'A shared reference for research, trading, and onboarding.',
     description:
-      'Turn complex market concepts into structured guidance for global teams, analysts, and new operators.',
+      'Structured market education for analysts, operators, and clients who need a common technical baseline.',
   },
 };
 
 const shellMetrics = [
-  { label: 'Latency', value: '<120ms', hint: 'signal response' },
   { label: 'Coverage', value: '480+', hint: 'listed symbols' },
-  { label: 'Workflows', value: '6', hint: 'decision surfaces' },
-];
-
-const floatingOrbs = [
-  { size: 440, left: '-6%', top: '-8%', className: 'orb-a' },
-  { size: 320, right: '8%', top: '14%', className: 'orb-b' },
-  { size: 360, left: '18%', bottom: '8%', className: 'orb-c' },
+  { label: 'Latency', value: '<120ms', hint: 'response window' },
+  { label: 'Views', value: '6', hint: 'core workflows' },
 ];
 
 const FloatingBackdrop = () => (
   <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-    <div className="absolute inset-0 bg-noise opacity-40" />
-    {floatingOrbs.map((orb, index) => (
-      <motion.div
-        key={index}
-        className={`ambient-orb ${orb.className}`}
-        style={orb}
-        animate={{ y: [0, -22, 0], x: [0, 16, 0], scale: [1, 1.05, 1] }}
-        transition={{ duration: 16 + index * 3, repeat: Infinity, ease: 'easeInOut' }}
-      />
-    ))}
+    <div className="absolute inset-0 bg-noise opacity-55" />
+    <div className="absolute inset-x-0 top-0 h-[420px] bg-shell-gradient" />
   </div>
 );
 
@@ -133,10 +120,9 @@ const SearchModal = ({ open, onClose, stocks, onSelect }) => {
                   <X className="h-4 w-4" />
                 </button>
               </div>
-              <div className="mt-3 flex flex-wrap gap-2 text-[11px] text-[var(--color-text-secondary)]">
-                <span className="pill-badge">Press `/` to open</span>
-                <span className="pill-badge">Enter to inspect</span>
-                <span className="pill-badge">Global symbol coverage</span>
+             <div className="mt-3 flex flex-wrap gap-2 text-[11px] text-[var(--color-text-secondary)]">
+                <span className="pill-badge">Shortcut `/`</span>
+                <span className="pill-badge">Live symbol search</span>
               </div>
             </div>
 
@@ -226,9 +212,9 @@ const GlobalStatsBar = ({ summary }) => {
 const ShellHero = ({ summary }) => {
   const location = useLocation();
   const meta = routeMeta[location.pathname] || {
-    eyebrow: 'Security workspace',
-    title: 'Inspect a single name with complete market context.',
-    description: 'Move from trend detection to detailed technical reasoning without leaving the workspace.',
+    eyebrow: 'Security',
+    title: 'Detailed technical context for a single security.',
+    description: 'Move from price history to technical reasoning and recommendation in one focused workspace.',
   };
 
   return (
@@ -241,19 +227,15 @@ const ShellHero = ({ summary }) => {
           className="hero-panel"
         >
           <div className="hero-copy">
-            <div className="eyebrow-row">
-              <span className="eyebrow-badge">{meta.eyebrow}</span>
-              <span className="eyebrow-separator" />
-              <span className="eyebrow-note">Global-ready operating model</span>
-            </div>
+            <div className="eyebrow-row"><span className="eyebrow-badge">{meta.eyebrow}</span></div>
             <h1>{meta.title}</h1>
             <p>{meta.description}</p>
           </div>
 
           <div className="hero-actions">
             <div className="hero-callout">
-              <ShieldCheck className="h-4 w-4 text-[var(--color-accent-teal)]" />
-              Trusted data surfaces for cross-border analyst workflows
+              <LineChart className="h-4 w-4 text-[var(--color-accent-cyan)]" />
+              Built for research desks, PM workflows, and high-volume review sessions.
             </div>
             <div className="metric-row">
               {shellMetrics.map((metric) => (
@@ -275,10 +257,10 @@ const ShellHero = ({ summary }) => {
         >
           <div className="rail-header">
             <div>
-              <span className="eyebrow-badge">Operations snapshot</span>
-              <h2>Executive market pulse</h2>
+              <span className="eyebrow-note">Market snapshot</span>
+              <h2>Today&apos;s operating view</h2>
             </div>
-            <Sparkles className="h-5 w-5 text-[var(--color-accent-gold)]" />
+            <SlidersHorizontal className="h-5 w-5 text-[var(--color-accent-cyan)]" />
           </div>
           <div className="rail-grid">
             <div className="rail-stat">
@@ -294,13 +276,13 @@ const ShellHero = ({ summary }) => {
               <strong>{summary?.losers ?? '--'}</strong>
             </div>
             <div className="rail-stat">
-              <span>Regional posture</span>
-              <strong>APAC-ready</strong>
+              <span>Review mode</span>
+              <strong>Live</strong>
             </div>
           </div>
           <div className="rail-foot">
-            <Globe2 className="h-4 w-4 text-[var(--color-accent-cyan)]" />
-            Designed for analyst teams, investment desks, and enterprise reporting layers.
+            <ShieldCheck className="h-4 w-4 text-[var(--color-accent-cyan)]" />
+            Structured for repeatable review, not one-off browsing.
           </div>
         </motion.div>
       </div>
@@ -370,7 +352,7 @@ const AppShell = () => {
             </div>
             <div>
               <div className="brand-title">PSX Atlas</div>
-              <div className="brand-subtitle">Enterprise market intelligence</div>
+              <div className="brand-subtitle">Market intelligence platform</div>
             </div>
           </NavLink>
 
@@ -396,7 +378,7 @@ const AppShell = () => {
             </button>
             <button className="action-button primary hidden md:flex">
               <ShieldCheck className="h-4 w-4" />
-              Enterprise Access
+              Open Workspace
             </button>
           </div>
         </div>
@@ -438,8 +420,8 @@ const AppShell = () => {
               <Activity className="h-5 w-5 text-white" strokeWidth={2.4} />
             </div>
             <div>
-              <div className="brand-title">PSX Atlas</div>
-              <div className="brand-subtitle">Built for regional exchanges, global operating standards, and enterprise rollout.</div>
+            <div className="brand-title">PSX Atlas</div>
+              <div className="brand-subtitle">Built for disciplined market review and production-grade analyst workflows.</div>
             </div>
           </div>
           <div className="text-sm text-[var(--color-text-secondary)]">
