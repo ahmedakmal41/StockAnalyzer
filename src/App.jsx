@@ -1,73 +1,119 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { BrowserRouter, NavLink, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
-import { AnimatePresence, motion } from 'framer-motion';
+import { BrowserRouter, NavLink, Route, Routes, useNavigate } from 'react-router-dom';
+import { AnimatePresence } from 'framer-motion';
 import {
   Activity,
   ArrowUpRight,
+  Bell,
+  BookOpen,
+  Briefcase,
+  Building2,
+  ChevronDown,
   ChevronRight,
-  LayoutDashboard,
+  CircleHelp,
+  Gauge,
+  GraduationCap,
+  Home,
   LineChart,
+  LogOut,
+  Megaphone,
+  Moon,
+  Newspaper,
+  Play,
   Search,
-  ShieldCheck,
-  SlidersHorizontal,
   Sparkles,
+  Star,
+  Sun,
+  User,
+  UserPlus,
   X,
 } from 'lucide-react';
 import axios from 'axios';
 
 import Dashboard from './pages/Dashboard';
 import Learn from './pages/Learn';
+import Portfolio from './pages/Portfolio';
 import Screener from './pages/Screener';
 import Sectors from './pages/Sectors';
 import StockDetail from './pages/StockDetail';
 import TopPicks from './pages/TopPicks';
+import Watchlist from './pages/Watchlist';
+import { apiRequest, getToken, setToken } from './lib/localApi';
 
 const API_BASE = 'https://stockanalyzerr-a6gxg3g3gwhebbex.eastus-01.azurewebsites.net';
 
-const routeMeta = {
-  '/': {
-    eyebrow: 'Overview',
-    title: 'Market intelligence for teams that trade with discipline.',
-    description:
-      'A unified operating layer for market breadth, security selection, sector rotation, and technical signal review.',
+const sidebarSections = [
+  {
+    label: 'Dashboard',
+    icon: Home,
+    items: [{ label: 'Dashboard', path: '/' }],
   },
-  '/screener': {
-    eyebrow: 'Screener',
-    title: 'A faster route from market scan to shortlist.',
-    description:
-      'Use live filters, ranked tables, and sector context to isolate investable names without leaving the workflow.',
+  {
+    label: 'Watchlist',
+    icon: Star,
+    items: [{ label: 'Watchlist', path: '/watchlist' }],
   },
-  '/top-picks': {
-    eyebrow: 'Top picks',
-    title: 'High-conviction ideas, ranked and explained.',
-    description:
-      'A ranked queue of opportunities built from momentum, price action, and participation signals.',
+  {
+    label: 'Market',
+    icon: Activity,
+    items: [
+      { label: 'All Stocks', path: '/screener' },
+      { label: 'KSE-100', path: '/screener' },
+      { label: 'KSE-30', path: '/screener' },
+      { label: 'KMI-30', path: '/screener' },
+      { label: 'Watchlist', path: '/watchlist' },
+      { label: 'Sectors', path: '/sectors' },
+    ],
   },
-  '/sectors': {
-    eyebrow: 'Sectors',
-    title: 'See where leadership is strengthening or fading.',
-    description:
-      'Compare participation, liquidity, and average move across the exchange in a single analytical frame.',
+  {
+    label: 'Learn',
+    icon: GraduationCap,
+    badge: 'New',
+    items: [
+      { label: 'Courses', path: '/learn' },
+      { label: 'Lessons', path: '/learn' },
+      { label: 'AI Tutor', path: '/learn' },
+      { label: 'Glossary', path: '/learn' },
+    ],
   },
-  '/learn': {
-    eyebrow: 'Learning',
-    title: 'A shared reference for research, trading, and onboarding.',
-    description:
-      'Structured market education for analysts, operators, and clients who need a common technical baseline.',
+  {
+    label: 'AI Tools',
+    icon: Sparkles,
+    items: [
+      { label: 'Stock Screener', path: '/screener' },
+      { label: 'AI Stock Picks', path: '/top-picks' },
+      { label: 'Portfolio Analyzer', path: '/portfolio' },
+      { label: 'Risk Calculator', path: '/portfolio' },
+    ],
   },
-};
-
-const shellMetrics = [
-  { label: 'Coverage', value: '480+', hint: 'listed symbols' },
-  { label: 'Latency', value: '<120ms', hint: 'response window' },
-  { label: 'Views', value: '6', hint: 'core workflows' },
+  {
+    label: 'Portfolio',
+    icon: Briefcase,
+    items: [
+      { label: 'My Portfolio', path: '/portfolio' },
+      { label: 'Transactions', path: '/portfolio' },
+      { label: 'Performance', path: '/portfolio' },
+    ],
+  },
+  {
+    label: 'News & Insights',
+    icon: Newspaper,
+    items: [
+      { label: 'Market News', path: '/' },
+      { label: 'Announcements', path: '/' },
+      { label: 'Research Reports', path: '/' },
+    ],
+  },
+  {
+    label: 'More',
+    icon: CircleHelp,
+    items: [
+      { label: 'Settings', path: '/' },
+      { label: 'Help Center', path: '/' },
+      { label: 'About Us', path: '/' },
+    ],
+  },
 ];
-
-const FloatingBackdrop = () => (
-  <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-    <div className="absolute inset-0 bg-noise opacity-55" />
-  </div>
-);
 
 const SearchModal = ({ open, onClose, stocks, onSelect }) => {
   const [query, setQuery] = useState('');
@@ -75,8 +121,7 @@ const SearchModal = ({ open, onClose, stocks, onSelect }) => {
 
   useEffect(() => {
     if (!open) return;
-    setQuery('');
-    const timer = window.setTimeout(() => inputRef.current?.focus(), 90);
+    const timer = window.setTimeout(() => inputRef.current?.focus(), 80);
     return () => window.clearTimeout(timer);
   }, [open]);
 
@@ -85,207 +130,293 @@ const SearchModal = ({ open, onClose, stocks, onSelect }) => {
   return (
     <AnimatePresence>
       {open && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[120] flex items-start justify-center bg-[#04111d]/70 px-4 pt-[12vh] backdrop-blur-xl"
+        <div
+          className="fixed inset-0 z-[120] flex items-start justify-center bg-[#020812]/75 px-4 pt-[12vh] backdrop-blur-xl"
           onClick={onClose}
         >
-          <motion.div
-            initial={{ opacity: 0, y: -24, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -24, scale: 0.98 }}
-            transition={{ type: 'spring', damping: 24, stiffness: 280 }}
-            className="enterprise-panel w-full max-w-3xl overflow-hidden"
+          <div
+            className="app-card w-full max-w-2xl overflow-hidden"
             onClick={(event) => event.stopPropagation()}
           >
-            <div className="border-b border-white/8 bg-white/4 px-6 py-5">
-              <div className="flex items-center gap-4">
-                <div className="icon-shell">
-                  <Search className="h-4 w-4 text-[var(--color-accent-teal)]" />
-                </div>
-                <input
-                  ref={inputRef}
-                  value={query}
-                  onChange={(event) => setQuery(event.target.value)}
-                  placeholder="Search a symbol, team watchlist, or company name"
-                  className="flex-1 bg-transparent text-base font-medium text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-muted)]"
-                />
-                <button
-                  onClick={onClose}
-                  className="rounded-full border border-white/8 bg-white/4 p-2 text-[var(--color-text-muted)] transition hover:border-white/16 hover:text-white"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-             <div className="mt-3 flex flex-wrap gap-2 text-[11px] text-[var(--color-text-secondary)]">
-                <span className="pill-badge">Shortcut `/`</span>
-                <span className="pill-badge">Live symbol search</span>
-              </div>
+            <div className="flex items-center gap-3 border-b border-white/8 px-4 py-4">
+              <Search className="h-5 w-5 text-[var(--ui-muted)]" />
+              <input
+                ref={inputRef}
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Search stocks, companies or topics..."
+                className="min-w-0 flex-1 bg-transparent text-sm text-white outline-none placeholder:text-[var(--ui-muted)]"
+              />
+              <button className="icon-button" onClick={onClose} aria-label="Close search">
+                <X className="h-4 w-4" />
+              </button>
             </div>
-
-            <div className="max-h-[440px] overflow-y-auto p-3">
+            <div className="max-h-[420px] overflow-y-auto p-2">
               {filtered.length === 0 ? (
-                <div className="rounded-[24px] border border-dashed border-white/10 bg-white/2 px-6 py-16 text-center text-sm text-[var(--color-text-secondary)]">
-                  No matching symbols found.
-                </div>
+                <div className="px-4 py-12 text-center text-sm text-[var(--ui-muted)]">No matching symbols found.</div>
               ) : (
-                filtered.map((stock, index) => (
-                  <motion.button
+                filtered.map((stock) => (
+                  <button
                     key={stock}
-                    initial={{ opacity: 0, x: -12 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.03 }}
                     onClick={() => {
                       onSelect(stock);
                       onClose();
                     }}
-                    className="flex w-full items-center justify-between rounded-[20px] px-4 py-3 text-left transition hover:bg-white/5"
+                    className="flex w-full items-center justify-between rounded-lg px-4 py-3 text-left text-sm text-white transition hover:bg-white/5"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="symbol-mark">{stock.slice(0, 2)}</div>
-                      <div>
-                        <div className="text-sm font-semibold text-white">{stock}</div>
-                        <div className="text-[11px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">Open analysis workspace</div>
-                      </div>
-                    </div>
-                    <ChevronRight className="h-4 w-4 text-[var(--color-text-muted)]" />
-                  </motion.button>
+                    <span className="font-semibold">{stock}</span>
+                    <ChevronRight className="h-4 w-4 text-[var(--ui-muted)]" />
+                  </button>
                 ))
               )}
             </div>
-          </motion.div>
-        </motion.div>
+          </div>
+        </div>
       )}
     </AnimatePresence>
   );
 };
 
-const GlobalStatsBar = ({ summary }) => {
-  if (!summary) {
-    return (
-      <div className="relative z-20 border-b border-white/6 bg-black/10 px-6 py-3 backdrop-blur-xl lg:px-12">
-        <div className="mx-auto h-10 w-full max-w-[1600px] animate-pulse rounded-full bg-white/6" />
-      </div>
-    );
-  }
+const Brand = () => (
+  <NavLink to="/" className="app-brand">
+    <div className="brand-chart">
+      <LineChart className="h-5 w-5" />
+    </div>
+    <div>
+      <div className="app-brand-name">Invest<span>AI</span>PK</div>
+      <div className="app-brand-tagline">Learn. Invest. Grow.</div>
+    </div>
+  </NavLink>
+);
 
-  const sentimentTone =
-    summary.market_sentiment === 'Bullish'
-      ? 'is-positive'
-      : summary.market_sentiment === 'Bearish'
-        ? 'is-negative'
-        : 'is-neutral';
+const Sidebar = ({ open, onClose }) => (
+  <>
+    <button className={`sidebar-backdrop ${open ? 'is-visible' : ''}`} onClick={onClose} aria-label="Close menu" />
+    <aside className={`app-sidebar ${open ? 'is-open' : ''}`}>
+      <Brand />
+      <nav className="sidebar-nav">
+        {sidebarSections.map((section) => (
+          <div key={section.label} className="sidebar-section">
+            <NavLink
+              to={section.items[0].path}
+              onClick={onClose}
+              className={({ isActive }) => `sidebar-section-button ${isActive && section.label === 'Dashboard' ? 'is-active' : ''}`}
+            >
+              <section.icon className="h-4 w-4" />
+              <span>{section.label}</span>
+              {section.badge ? <em>{section.badge}</em> : null}
+              {section.items.length > 1 ? <ChevronDown className="ml-auto h-4 w-4" /> : null}
+            </NavLink>
+            {section.items.length > 1 ? (
+              <div className="sidebar-subnav">
+                {section.items.map((item) => (
+                  <NavLink key={`${section.label}-${item.label}`} to={item.path} onClick={onClose}>
+                    {item.label}
+                  </NavLink>
+                ))}
+              </div>
+            ) : null}
+          </div>
+        ))}
+      </nav>
+      <div className="theme-toggle">
+        <Sun className="h-4 w-4" />
+        <Moon className="h-4 w-4 text-[#d7bb87]" />
+        <span>Dark Mode</span>
+      </div>
+    </aside>
+  </>
+);
+
+const AuthModal = ({ open, onClose, onAuthenticated }) => {
+  const [mode, setMode] = useState('signup');
+  const [form, setForm] = useState({ name: '', email: '', password: '' });
+  const [error, setError] = useState('');
+
+  if (!open) return null;
+
+  const submit = async (event) => {
+    event.preventDefault();
+    setError('');
+    try {
+      const data = await apiRequest(`/api/auth/${mode}`, {
+        method: 'POST',
+        body: JSON.stringify(form),
+      });
+      setToken(data.token);
+      onAuthenticated(data.user);
+      onClose();
+    } catch (err) {
+      setError(err.message);
+    }
+  };
 
   return (
-    <div className="relative z-20 border-b border-white/6 bg-black/15 px-6 py-3 backdrop-blur-xl lg:px-12">
-      <div className="mx-auto flex max-w-[1600px] flex-wrap items-center gap-3">
-        <div className="ticker-chip">
-          <span>Universe</span>
-          <strong>480+ symbols</strong>
-        </div>
-        <div className={`ticker-chip ${sentimentTone}`}>
-          <span>Sentiment</span>
-          <strong>{summary.market_sentiment}</strong>
-        </div>
-        <div className="ticker-chip">
-          <span>Volume</span>
-          <strong>{(summary.total_volume / 1e6).toFixed(1)}M</strong>
-        </div>
-        <div className="ticker-chip">
-          <span>Advance / Decline</span>
-          <strong>
-            {summary.gainers} / {summary.losers}
-          </strong>
-        </div>
-        <div className="ml-auto hidden items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--color-text-secondary)] lg:flex">
-          <span className="status-dot" />
-          Live market link active
-        </div>
-      </div>
+    <div className="auth-backdrop" onClick={onClose}>
+      <form className="auth-card" onSubmit={submit} onClick={(event) => event.stopPropagation()}>
+        <button type="button" className="icon-button auth-close" onClick={onClose} aria-label="Close account form">
+          <X className="h-4 w-4" />
+        </button>
+        <div className="auth-icon"><UserPlus className="h-5 w-5" /></div>
+        <h2>{mode === 'signup' ? 'Create your account' : 'Welcome back'}</h2>
+        <p>Save favorite stocks, build a portfolio, and track profit signals locally.</p>
+        {mode === 'signup' ? (
+          <label>
+            Name
+            <input value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} placeholder="Your name" />
+          </label>
+        ) : null}
+        <label>
+          Email
+          <input value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} placeholder="you@example.com" type="email" />
+        </label>
+        <label>
+          Password
+          <input value={form.password} onChange={(event) => setForm({ ...form, password: event.target.value })} placeholder="At least 6 characters" type="password" />
+        </label>
+        {error ? <div className="auth-error">{error}</div> : null}
+        <button className="primary-cta auth-submit" type="submit">{mode === 'signup' ? 'Sign Up' : 'Sign In'}</button>
+        <button
+          type="button"
+          className="auth-switch"
+          onClick={() => {
+            setError('');
+            setMode(mode === 'signup' ? 'login' : 'signup');
+          }}
+        >
+          {mode === 'signup' ? 'Already have an account? Sign in' : 'Need an account? Sign up'}
+        </button>
+      </form>
     </div>
   );
 };
 
-const ShellHero = ({ summary }) => {
-  const location = useLocation();
-  const meta = routeMeta[location.pathname] || {
-    eyebrow: 'Security',
-    title: 'Detailed technical context for a single security.',
-    description: 'Move from price history to technical reasoning and recommendation in one focused workspace.',
-  };
+const TopBar = ({ summary, onSearch, onMenu, user, onAuthClick, onLogout }) => (
+  <header className="app-topbar">
+    <button className="icon-button lg:hidden" onClick={onMenu} aria-label="Open menu">
+      <Gauge className="h-4 w-4" />
+    </button>
+    <button className="top-search" onClick={onSearch}>
+      <span>Search stocks, companies or topics...</span>
+      <Search className="h-4 w-4" />
+    </button>
+    <div className="index-chip">
+      <div>
+        <strong>KSE-100</strong>
+        <span>Market Open · 10:35 AM PKT</span>
+      </div>
+      <div>
+        <strong>{summary?.kse100?.toLocaleString?.() || '70,123.45'}</strong>
+        <span className="positive">+512.35 (0.74%)</span>
+      </div>
+    </div>
+    <button className="icon-button" aria-label="Notifications">
+      <Bell className="h-4 w-4" />
+    </button>
+    <button className="profile-button" onClick={user ? undefined : onAuthClick} aria-label="Profile">
+      <User className="h-4 w-4" />
+      <span>{user?.name?.slice(0, 2).toUpperCase() || 'UP'}</span>
+      <strong>{user?.name || 'Sign Up'}</strong>
+    </button>
+    {user ? (
+      <button className="icon-button" onClick={onLogout} aria-label="Sign out">
+        <LogOut className="h-4 w-4" />
+      </button>
+    ) : (
+      <button className="icon-button" onClick={onAuthClick} aria-label="Sign up">
+        <ChevronDown className="h-4 w-4" />
+      </button>
+    )}
+  </header>
+);
+
+const MiniChart = () => (
+  <svg viewBox="0 0 280 88" className="mini-chart" role="img" aria-label="Market trend">
+    <path d="M2 68 C26 52 32 45 47 48 C65 50 71 23 88 32 C105 40 112 65 132 60 C150 56 153 31 171 35 C188 39 197 22 213 20 C231 19 232 41 249 36 C263 33 268 24 278 23" />
+    <circle cx="213" cy="20" r="3" />
+  </svg>
+);
+
+const RightRail = ({ summary }) => {
+  const gainers = summary?.gainers ?? 0;
+  const losers = summary?.losers ?? 0;
+  const sentiment = gainers >= losers ? 'positive momentum' : 'mixed participation';
 
   return (
-    <section className="relative z-10 px-6 pt-8 lg:px-12 lg:pt-10">
-      <div className="mx-auto grid max-w-[1600px] gap-6 lg:grid-cols-[1.3fr_0.7fr]">
-        <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-          className="hero-panel"
-        >
-          <div className="hero-copy">
-            <div className="eyebrow-row"><span className="eyebrow-badge">{meta.eyebrow}</span></div>
-            <h1>{meta.title}</h1>
-            <p>{meta.description}</p>
+    <aside className="right-rail">
+      <section className="app-card rail-card">
+        <div className="rail-card-header">
+          <h3>Market Overview</h3>
+          <button>View All <ChevronRight className="h-3.5 w-3.5" /></button>
+        </div>
+        {[
+          ['KSE-100', '70,123.45', '+512.35 (0.74%)'],
+          ['KSE-30', '21,456.78', '+156.23 (0.73%)'],
+          ['KMI-30', '110,234.67', '+812.45 (0.74%)'],
+          ['All Shares', '45,678.90', '+245.67 (0.54%)'],
+        ].map(([name, value, change]) => (
+          <div key={name} className="market-line">
+            <span>{name}</span>
+            <strong>{value}</strong>
+            <em>{change}</em>
           </div>
+        ))}
+        <MiniChart />
+        <div className="range-tabs">
+          {['1D', '1W', '1M', '3M', '1Y', 'YTD'].map((range) => <button key={range}>{range}</button>)}
+        </div>
+      </section>
 
-          <div className="hero-actions">
-            <div className="hero-callout">
-              <LineChart className="h-4 w-4 text-[var(--color-accent-cyan)]" />
-              Built for research desks, PM workflows, and high-volume review sessions.
-            </div>
-            <div className="metric-row">
-              {shellMetrics.map((metric) => (
-                <div key={metric.label} className="metric-card">
-                  <span>{metric.label}</span>
-                  <strong>{metric.value}</strong>
-                  <em>{metric.hint}</em>
-                </div>
-              ))}
-            </div>
-          </div>
-        </motion.div>
+      <section className="app-card rail-card">
+        <div className="rail-card-header">
+          <h3>AI Market Insight</h3>
+          <span className="ai-orb">AI</span>
+        </div>
+        <p className="rail-copy">The market is showing {sentiment} with buying interest across liquid PSX names.</p>
+        <div className="sector-chips">
+          <span>Banks +1.24%</span>
+          <span>Fertilizer +1.08%</span>
+          <span>Oil & Gas +0.85%</span>
+        </div>
+        <button className="link-button">View Full Insight <ArrowUpRight className="h-3.5 w-3.5" /></button>
+      </section>
 
-        <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.55, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
-          className="insight-rail"
-        >
-          <div className="rail-header">
+      <section className="app-card rail-card">
+        <div className="rail-card-header">
+          <h3>Continue Learning</h3>
+          <button>View All <ChevronRight className="h-3.5 w-3.5" /></button>
+        </div>
+        {[
+          [BookOpen, 'Stock Market Basics', '5 Lessons', '60%'],
+          [LineChart, 'Technical Analysis', '8 Lessons', '35%'],
+          [Building2, 'Fundamental Analysis', '6 Lessons', '20%'],
+        ].map(([Icon, title, meta, progress]) => (
+          <div key={title} className="learning-row">
+            <div className="learning-icon">{React.createElement(Icon, { className: 'h-4 w-4' })}</div>
             <div>
-              <span className="eyebrow-note">Market snapshot</span>
-              <h2>Today&apos;s operating view</h2>
+              <strong>{title}</strong>
+              <span>{meta}</span>
+              <i style={{ width: progress }} />
             </div>
-            <SlidersHorizontal className="h-5 w-5 text-[var(--color-accent-cyan)]" />
+            <button aria-label={`Continue ${title}`}><Play className="h-3.5 w-3.5" /></button>
           </div>
-          <div className="rail-grid">
-            <div className="rail-stat">
-              <span>Market stance</span>
-              <strong>{summary?.market_sentiment || 'Syncing'}</strong>
-            </div>
-            <div className="rail-stat">
-              <span>Gainers</span>
-              <strong>{summary?.gainers ?? '--'}</strong>
-            </div>
-            <div className="rail-stat">
-              <span>Losers</span>
-              <strong>{summary?.losers ?? '--'}</strong>
-            </div>
-            <div className="rail-stat">
-              <span>Review mode</span>
-              <strong>Live</strong>
-            </div>
+        ))}
+      </section>
+
+      <section className="app-card rail-card">
+        <div className="rail-card-header">
+          <h3>Announcements</h3>
+          <button>View All <ChevronRight className="h-3.5 w-3.5" /></button>
+        </div>
+        <div className="announcement">
+          <Megaphone className="h-5 w-5" />
+          <div>
+            <strong>PSX Holiday Notice</strong>
+            <p>Market will remain closed on the announced exchange holiday.</p>
           </div>
-          <div className="rail-foot">
-            <ShieldCheck className="h-4 w-4 text-[var(--color-accent-cyan)]" />
-            Structured for repeatable review, not one-off browsing.
-          </div>
-        </motion.div>
-      </div>
-    </section>
+        </div>
+      </section>
+    </aside>
   );
 };
 
@@ -293,43 +424,64 @@ const AppShell = () => {
   const navigate = useNavigate();
   const [stocks, setStocks] = useState([]);
   const [summary, setSummary] = useState(null);
+  const [user, setUser] = useState(null);
+  const [authOpen, setAuthOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     axios.get(`${API_BASE}/stocks`).then((response) => setStocks(response.data.stocks || [])).catch(() => {});
     axios.get(`${API_BASE}/stocks/market-summary`).then((response) => setSummary(response.data)).catch(() => {});
+    if (getToken()) {
+      apiRequest('/api/me').then((data) => setUser(data.user)).catch(() => setToken(null));
+    }
 
-    const handleScroll = () => setScrolled(window.scrollY > 18);
     const handleKeydown = (event) => {
       if (event.key === '/' && !event.ctrlKey && !event.metaKey) {
         event.preventDefault();
         setSearchOpen(true);
       }
-      if (event.key === 'Escape') setSearchOpen(false);
+      if (event.key === 'Escape') {
+        setSearchOpen(false);
+        setSidebarOpen(false);
+      }
     };
 
-    window.addEventListener('scroll', handleScroll);
     window.addEventListener('keydown', handleKeydown);
-
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('keydown', handleKeydown);
-    };
+    return () => window.removeEventListener('keydown', handleKeydown);
   }, []);
 
-  const navItems = [
-    { label: 'Dashboard', path: '/', icon: LayoutDashboard },
-    { label: 'Screener', path: '/screener', icon: Search },
-    { label: 'Top Picks', path: '/top-picks', icon: ArrowUpRight },
-    { label: 'Sectors', path: '/sectors', icon: Activity },
-    { label: 'Learn', path: '/learn', icon: Sparkles },
-  ];
-
   return (
-    <div className="app-shell">
-      <FloatingBackdrop />
-      <GlobalStatsBar summary={summary} />
+    <div className="workspace-shell">
+      <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <div className="workspace-body">
+        <TopBar
+          summary={summary}
+          onSearch={() => setSearchOpen(true)}
+          onMenu={() => setSidebarOpen(true)}
+          user={user}
+          onAuthClick={() => setAuthOpen(true)}
+          onLogout={() => {
+            setToken(null);
+            setUser(null);
+          }}
+        />
+        <div className="workspace-grid">
+          <main className="workspace-main">
+            <Routes>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/screener" element={<Screener />} />
+              <Route path="/portfolio" element={<Portfolio authUser={user} />} />
+              <Route path="/watchlist" element={<Watchlist authUser={user} />} />
+              <Route path="/top-picks" element={<TopPicks />} />
+              <Route path="/sectors" element={<Sectors />} />
+              <Route path="/learn" element={<Learn />} />
+              <Route path="/stock/:symbol" element={<StockDetail />} />
+            </Routes>
+          </main>
+          <RightRail summary={summary} />
+        </div>
+      </div>
 
       <SearchModal
         open={searchOpen}
@@ -337,97 +489,7 @@ const AppShell = () => {
         stocks={stocks}
         onSelect={(stock) => navigate(`/stock/${stock}`)}
       />
-
-      <motion.nav
-        initial={{ opacity: 0, y: -18 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-        className={`sticky top-0 z-50 px-6 py-4 transition duration-300 lg:px-12 ${scrolled ? 'is-stuck' : ''}`}
-      >
-        <div className="mx-auto flex max-w-[1600px] items-center gap-4 rounded-[28px] border border-white/8 bg-black/18 px-4 py-3 backdrop-blur-2xl lg:px-6">
-          <NavLink to="/" className="brand-lockup">
-            <div className="brand-mark">
-              <Activity className="h-5 w-5 text-white" strokeWidth={2.4} />
-            </div>
-            <div>
-              <div className="brand-title">PSX Atlas</div>
-              <div className="brand-subtitle">Market intelligence platform</div>
-            </div>
-          </NavLink>
-
-          <div className="hidden min-w-0 flex-1 items-center justify-center gap-2 xl:flex">
-            {navItems.map((item) => (
-              <NavLink
-                key={item.path}
-                to={item.path}
-                end={item.path === '/'}
-                className={({ isActive }) => `nav-pill ${isActive ? 'active' : ''}`}
-              >
-                <item.icon className="h-4 w-4" />
-                {item.label}
-              </NavLink>
-            ))}
-          </div>
-
-          <div className="ml-auto flex items-center gap-2">
-            <button onClick={() => setSearchOpen(true)} className="action-button muted hidden sm:flex">
-              <Search className="h-4 w-4" />
-              Search
-              <span className="shortcut-key">/</span>
-            </button>
-            <button className="action-button primary hidden md:flex">
-              <ShieldCheck className="h-4 w-4" />
-              Open Workspace
-            </button>
-          </div>
-        </div>
-
-        <div className="mx-auto mt-3 flex max-w-[1600px] gap-2 overflow-x-auto xl:hidden">
-          {navItems.map((item) => (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              end={item.path === '/'}
-              className={({ isActive }) => `nav-pill compact ${isActive ? 'active' : ''}`}
-            >
-              <item.icon className="h-4 w-4" />
-              {item.label}
-            </NavLink>
-          ))}
-        </div>
-      </motion.nav>
-
-      <ShellHero summary={summary} />
-
-      <main className="relative z-10 px-6 pb-10 pt-8 lg:px-12">
-        <div className="mx-auto max-w-[1600px]">
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/screener" element={<Screener />} />
-            <Route path="/top-picks" element={<TopPicks />} />
-            <Route path="/sectors" element={<Sectors />} />
-            <Route path="/learn" element={<Learn />} />
-            <Route path="/stock/:symbol" element={<StockDetail />} />
-          </Routes>
-        </div>
-      </main>
-
-      <footer className="relative z-10 px-6 pb-12 pt-10 lg:px-12">
-        <div className="mx-auto flex max-w-[1600px] flex-col gap-6 rounded-[28px] border border-white/8 bg-black/14 px-6 py-6 backdrop-blur-xl lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex items-center gap-4">
-            <div className="brand-mark is-footer">
-              <Activity className="h-5 w-5 text-white" strokeWidth={2.4} />
-            </div>
-            <div>
-            <div className="brand-title">PSX Atlas</div>
-              <div className="brand-subtitle">Built for disciplined market review and production-grade analyst workflows.</div>
-            </div>
-          </div>
-          <div className="text-sm text-[var(--color-text-secondary)]">
-            Informational use only. Validate investment decisions against internal policy, compliance controls, and live exchange data.
-          </div>
-        </div>
-      </footer>
+      <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} onAuthenticated={setUser} />
     </div>
   );
 };
